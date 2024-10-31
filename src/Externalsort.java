@@ -3,6 +3,8 @@
  * check this (nimay's edit)
  */
 
+import java.io.IOException;
+
 /**
  * The class containing the main method.
  *
@@ -35,10 +37,12 @@ public class Externalsort {
     /**
      * @param args
      *     Command line parameters
+     * @throws IOException 
      */
-    public static void main(String[] args) {
-        
-        
+    public static void main(String[] args) throws IOException {
+        String fileName = args[0];
+        BinaryParser binaryParser = new BinaryParser(fileName);
+        binaryParser.printRecords();
     }
 
 }
