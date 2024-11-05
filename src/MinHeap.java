@@ -270,6 +270,10 @@ class MinHeap<T extends Comparable<T>> {
      * @return boolean
      */
     private boolean isLessThan(int pos1, int pos2) {
+        if (heap[pos1] == null || heap[pos2] == null)
+        {
+            return false;
+        }
         return heap[pos1].compareTo(heap[pos2]) < 0;
     }
 }
