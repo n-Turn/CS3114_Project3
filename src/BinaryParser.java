@@ -46,19 +46,12 @@ public class BinaryParser {
     public void printRecords() throws IOException {
         while (currentPosition < raf.length()
             && currentPosition < ByteFile.BYTES_PER_BLOCK * 8) {
-            raf.seek(currentPosition);
-            byte[] inputBufferHelper = new byte[ByteFile.BYTES_PER_BLOCK];
-            raf.read(inputBufferHelper);
-            inputBuffer = ByteBuffer.wrap(inputBufferHelper);
-            inputBuffer.rewind();
-            currentPosition += ByteFile.BYTES_PER_BLOCK;
 
-            for (int i = 0; i < ByteFile.RECORDS_PER_BLOCK; i++) {
-                long recID = inputBuffer.getLong();
-                double key = inputBuffer.getDouble();
-                Record currentRecord = new Record(recID, key);
-                minHeap.insert(currentRecord);
-            }
+            moveToInputBuffer();
+
+            insertIntoHeap();
+
+            // clear the input buffer and increment the number of blocks
             inputBuffer.clear();
             numberOfBlocks++;
         }
@@ -66,19 +59,11 @@ public class BinaryParser {
         currentPosition = 0;
         int currentBlock = 0;
         while (currentBlock < numberOfBlocks) {
-            int currentRecord = 0;
-            while (currentRecord < ByteFile.RECORDS_PER_BLOCK) {
-                Record removedRecord = minHeap.removeMin();
-                long recordId = removedRecord.getID();
-                double recordKey = removedRecord.getKey();
-                outputBuffer.putLong(recordId);
-                outputBuffer.putDouble(recordKey);
-                currentRecord++;
-            }
-            outputBuffer.rewind();
-            while (outputBuffer.hasRemaining()) {
-                outputFile.writeByte(outputBuffer.get());
-            }
+
+            moveToOutputBuffer();
+
+            writeToOutputFile();
+
             currentPosition += ByteFile.BYTES_PER_BLOCK;
             outputFile.seek(currentPosition);
 
@@ -86,6 +71,72 @@ public class BinaryParser {
             currentBlock++;
         }
         printOutput();
+    }
+
+
+    public void moveToInputBuffer() throws IOException {
+        raf.seek(currentPosition);
+        byte[] inputBufferHelper = new byte[ByteFile.BYTES_PER_BLOCK];
+        raf.read(inputBufferHelper);
+        inputBuffer = ByteBuffer.wrap(inputBufferHelper);
+        inputBuffer.rewind();
+        currentPosition += ByteFile.BYTES_PER_BLOCK;
+    }
+
+
+    public void insertIntoHeap() throws IOException {
+        for (int i = 0; i < ByteFile.RECORDS_PER_BLOCK; i++) {
+            long recID = inputBuffer.getLong();
+            double key = inputBuffer.getDouble();
+            Record currentRecord = new Record(recID, key);
+            minHeap.insert(currentRecord);
+        }
+    }
+
+
+    public void moveToOutputBuffer() {
+        int currentRecord = 0;
+        while (currentRecord < ByteFile.RECORDS_PER_BLOCK) {
+            Record removedRecord = minHeap.removeMin();
+            long recordId = removedRecord.getID();
+            double recordKey = removedRecord.getKey();
+            outputBuffer.putLong(recordId);
+            outputBuffer.putDouble(recordKey);
+            currentRecord++;
+        }
+    }
+
+
+    public void writeToOutputFile() throws IOException {
+        outputBuffer.rewind();
+        while (outputBuffer.hasRemaining()) {
+            outputFile.writeByte(outputBuffer.get());
+        }
+    }
+
+
+    public void printOutput() throws IOException {
+        int printCounter = 0;
+
+        int i = 0;
+        while (i < ByteFile.BYTES_PER_BLOCK * 8) {
+            outputFile.seek(i);
+            byte[] recordBytes = new byte[16];
+            outputFile.read(recordBytes);
+            ByteBuffer printBuffer = ByteBuffer.wrap(recordBytes);
+            // Append the record to the output
+            System.out.print(printBuffer.getLong() + " " + printBuffer
+                .getDouble());
+            printCounter++;
+
+            if (printCounter % 5 == 0) {
+                System.out.println();
+            }
+            else {
+                System.out.print(" ");
+            }
+            i += (ByteFile.RECORDS_PER_BLOCK * 16);
+        }
     }
 
 // /**
@@ -110,10 +161,9 @@ public class BinaryParser {
 //
 // }
 
-
-//    public void insertIntoMinHeap() {
+// public void insertIntoMinHeap() {
 //
-//    }
+// }
 
 // public void printOutput() throws IOException {
 // long targetSize = ByteFile.BYTES_PER_BLOCK * 8;
@@ -139,28 +189,4 @@ public class BinaryParser {
 // }
 // }
 
-
-    public void printOutput() throws IOException {        
-        int printCounter = 0;
-        
-        int i = 0;
-        while (i < ByteFile.BYTES_PER_BLOCK * 8) {
-            outputFile.seek(i);
-            byte[] recordBytes = new byte[16];
-            outputFile.read(recordBytes);
-            ByteBuffer printBuffer = ByteBuffer.wrap(recordBytes);
-            // Append the record to the output
-            System.out.print(printBuffer.getLong() + " " + printBuffer
-                .getDouble());
-            printCounter++;
-
-            if (printCounter % 5 == 0) {
-                System.out.println();
-            }
-            else {
-                System.out.print(" ");
-            }
-            i += (ByteFile.RECORDS_PER_BLOCK * 16);
-        }
-    }
 }
