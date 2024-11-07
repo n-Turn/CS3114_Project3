@@ -42,7 +42,8 @@ public class Externalsort {
      */
     public static void main(String[] args) throws IOException {
         String fileName = args[0];
-        new BinaryParser(fileName);
+        BinaryParser binaryParser = new BinaryParser(fileName);
+        binaryParser.printRecords();
     }
 
 }
