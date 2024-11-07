@@ -247,38 +247,137 @@ public class BinaryParser {
      * @throws IOException
      */
     public void multiwayMerge() throws IOException {
+        // Clear buffers before starting merge
         inputBuffer.clear();
         outputBuffer.clear();
 
-        // Insert the first block of each of the first 8 runs into the heap
-        loadRunBlock();
+        // Create array to track current positions in each run
+        int maxRunsToMerge = 8; // Using 8 blocks of memory
+        ByteBuffer[] runBuffers = new ByteBuffer[maxRunsToMerge];
+        Record[] currentRecords = new Record[maxRunsToMerge];
+        int[] currentRunBlocks = new int[maxRunsToMerge];
 
-        // Begin the merging process
-        while (minHeap.heapSize() != 0) {
-            Record minRecord = minHeap.removeMin();
-            minHeap.setHeapSize(minHeap.heapSize() - 1);
+        // Initialize the heap for merging
+        heap = new Record[maxRunsToMerge];
+        minHeap = new MinHeap<>(heap, 0, maxRunsToMerge);
 
-            // Add minRecord to the output buffer
-            outputBuffer.putLong(minRecord.getID());
-            outputBuffer.putDouble(minRecord.getKey());
+        // Process runs in groups of 8
+        Iterator<DoubleLL.Node> runIterator = runsTracker.iterator();
+        while (runIterator.hasNext()) {
+            int activeRuns = 0;
 
-            // Flush the buffer if full
-            if (outputBuffer.position() == outputBuffer.limit()) {
-                flushOutputBuffer();
+            // Load first block from up to 8 runs
+            while (runIterator.hasNext() && activeRuns < maxRunsToMerge) {
+                DoubleLL.Node run = runIterator.next();
+                runBuffers[activeRuns] = ByteBuffer.allocate(
+                    ByteFile.BYTES_PER_BLOCK);
+
+                // Read first block of the run
+                middleFile.seek(run.getStart());
+                byte[] blockData = new byte[ByteFile.BYTES_PER_BLOCK];
+                middleFile.read(blockData);
+                runBuffers[activeRuns] = ByteBuffer.wrap(blockData);
+
+                // Load first record from this run into heap
+                if (runBuffers[activeRuns].remaining() >= Record.BYTES) {
+                    long id = runBuffers[activeRuns].getLong();
+                    double key = runBuffers[activeRuns].getDouble();
+                    Record record = new Record(id, key);
+                    currentRecords[activeRuns] = record;
+                    minHeap.insert(record);
+                    currentRunBlocks[activeRuns] = 1;
+                }
+
+                activeRuns++;
             }
 
-            // Get the next record from the same run as minRecord
-            if (!loadNextRecordFromRun(minRecord.getRunIndex())) {
-                // If the run has no more records, continue with remaining runs
-                continue;
+            // Merge runs until all records are processed
+            while (minHeap.heapSize() > 0) {
+                Record minRecord = minHeap.removeMin();
+
+                // Write to output buffer
+                outputBuffer.putLong(minRecord.getID());
+                outputBuffer.putDouble(minRecord.getKey());
+
+                // If output buffer is full, write to file
+                if (outputBuffer.position() == ByteFile.BYTES_PER_BLOCK) {
+                    flushOutputBuffer();
+                }
+
+                // Find which run the record came from
+                for (int i = 0; i < activeRuns; i++) {
+                    if (currentRecords[i] != null && currentRecords[i]
+                        .getID() == minRecord.getID() && currentRecords[i]
+                            .getKey() == minRecord.getKey()) {
+
+                        // Get next record from this run
+                        if (runBuffers[i].remaining() >= Record.BYTES) {
+                            long id = runBuffers[i].getLong();
+                            double key = runBuffers[i].getDouble();
+                            Record newRecord = new Record(id, key);
+                            currentRecords[i] = newRecord;
+                            minHeap.insert(newRecord);
+                        }
+                        // If buffer is empty but run has more blocks
+                        else if (currentRunBlocks[i]
+                            * ByteFile.BYTES_PER_BLOCK < runsTracker.getHead()
+                                .getLength()) {
+                            // Read next block from this run
+                            middleFile.seek(runsTracker.getHead().getStart()
+                                + (currentRunBlocks[i]
+                                    * ByteFile.BYTES_PER_BLOCK));
+                            byte[] blockData =
+                                new byte[ByteFile.BYTES_PER_BLOCK];
+                            middleFile.read(blockData);
+                            runBuffers[i] = ByteBuffer.wrap(blockData);
+                            currentRunBlocks[i]++;
+
+                            // Get first record from new block
+                            long id = runBuffers[i].getLong();
+                            double key = runBuffers[i].getDouble();
+                            Record newRecord = new Record(id, key);
+                            currentRecords[i] = newRecord;
+                            minHeap.insert(newRecord);
+                        }
+                        else {
+                            currentRecords[i] = null;
+                        }
+                        break;
+                    }
+                }
             }
         }
 
-        // Final flush for any remaining records in the output buffer
+        // Flush any remaining records in output buffer
         if (outputBuffer.position() > 0) {
             flushOutputBuffer();
         }
-        outputFile.close();
+
+        // Update the input file with sorted records
+        copyOutputToInput();
+    }
+
+
+    private void flushOutputBuffer() throws IOException {
+        outputBuffer.flip();
+        byte[] data = new byte[outputBuffer.limit()];
+        outputBuffer.get(data);
+        inputFile.write(data);
+        outputBuffer.clear();
+    }
+
+
+    private void copyOutputToInput() throws IOException {
+        // Reset file positions
+        inputFile.seek(0);
+        middleFile.seek(0);
+
+        // Copy block by block
+        byte[] buffer = new byte[ByteFile.BYTES_PER_BLOCK];
+        int bytesRead;
+        while ((bytesRead = middleFile.read(buffer)) != -1) {
+            inputFile.write(buffer, 0, bytesRead);
+        }
     }
 
 
@@ -342,20 +441,6 @@ public class BinaryParser {
         }
 
         return false;
-    }
-
-
-    /**
-     * Flushes the output buffer to the output file.
-     *
-     * @throws IOException
-     */
-    private void flushOutputBuffer() throws IOException {
-        outputBuffer.flip();
-        while (outputBuffer.hasRemaining()) {
-            outputFile.write(outputBuffer.get());
-        }
-        outputBuffer.clear();
     }
 
 // /**

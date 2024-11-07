@@ -96,6 +96,7 @@ public class ByteFile {
         raf.close(); // be sure to close file
     }
 
+
     // ----------------------------------------------------------
     /**
      * checks if a file of records is sorted or not
@@ -111,7 +112,7 @@ public class ByteFile {
         RandomAccessFile raf = new RandomAccessFile(theFile, "r");
         raf.seek(0);
         Double prevRecKey = Double.MIN_VALUE;
-        
+
         for (int block = 0; block < numBlocks; block++) {
             raf.read(basicBuffer);
             // ^^^ the slow, costly operation!!! Good thing we use buffer

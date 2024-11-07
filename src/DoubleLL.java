@@ -27,7 +27,8 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         private long length; // The length of the run
 
         /**
-         * This constructor initializes the node with the provided start and length.
+         * This constructor initializes the node with the provided start and
+         * length.
          * 
          * @param start
          *            the start of the run
@@ -39,6 +40,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
             this.length = length;
         }
 
+
         /**
          * This method sets the reference to the next node in the list.
          * 
@@ -48,6 +50,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         public void setNext(Node n) {
             next = n;
         }
+
 
         /**
          * This method sets the reference to the previous node in the list.
@@ -59,6 +62,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
             previous = n;
         }
 
+
         /**
          * This method returns the next node in the list.
          * 
@@ -67,6 +71,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         public Node next() {
             return next;
         }
+
 
         /**
          * This method returns the previous node in the list.
@@ -77,6 +82,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
             return previous;
         }
 
+
         /**
          * This method returns the start of the run.
          * 
@@ -85,6 +91,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         public long getStart() {
             return start;
         }
+
 
         /**
          * This method returns the length of the run.
@@ -108,7 +115,8 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         tail = null;
         size = 0;
     }
-    
+
+
     /**
      * This method returns the head node of the list.
      * 
@@ -117,6 +125,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
     public Node getHead() {
         return head;
     }
+
 
     /**
      * This method returns the tail node of the list.
@@ -127,6 +136,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         return tail;
     }
 
+
     /**
      * This method checks if the list is empty.
      * 
@@ -136,6 +146,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         return size == 0;
     }
 
+
     /**
      * This method returns the number of elements in the list.
      * 
@@ -144,6 +155,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
     public int size() {
         return size;
     }
+
 
     /**
      * This method clears the list by setting head and tail to null and
@@ -155,8 +167,10 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         size = 0;
     }
 
+
     /**
-     * This method checks if the list contains a specific element based on start.
+     * This method checks if the list contains a specific element based on
+     * start.
      * 
      * @param start
      *            the start of the run to check for
@@ -165,6 +179,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
     public boolean contains(long start) {
         return lastIndexOf(start) != -1;
     }
+
 
     /**
      * This method returns the node at the specified index.
@@ -182,6 +197,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         }
         return current;
     }
+
 
     /**
      * This method returns the last index of the specified start in the list.
@@ -201,6 +217,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         return -1;
     }
 
+
     /**
      * This method adds a new entry to the end of the list.
      * 
@@ -212,6 +229,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
     public void add(long start, long length) {
         add(size(), start, length);
     }
+
 
     /**
      * This method adds a new entry at the specified index.
@@ -230,16 +248,19 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
             if (head == null) {
                 head = addition;
                 tail = addition;
-            } else {
+            }
+            else {
                 addition.setNext(head);
                 head.setPrevious(addition);
                 head = addition;
             }
-        } else if (index == size) {
+        }
+        else if (index == size) {
             tail.setNext(addition);
             addition.setPrevious(tail);
             tail = addition;
-        } else {
+        }
+        else {
             Node nodeAfter = getNodeAtIndex(index);
             Node nodeBefore = nodeAfter.previous();
             addition.setNext(nodeAfter);
@@ -250,6 +271,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
 
         size++;
     }
+
 
     /**
      * This method removes the node at the specified index.
@@ -268,12 +290,14 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
             if (head != null) {
                 head.setPrevious(null);
             }
-        } else if (nodeToBeRemoved == tail) {
+        }
+        else if (nodeToBeRemoved == tail) {
             tail = tail.previous();
             if (tail != null) {
                 tail.setNext(null);
             }
-        } else {
+        }
+        else {
             Node before = nodeToBeRemoved.previous();
             Node after = nodeToBeRemoved.next();
             before.setNext(after);
@@ -289,6 +313,7 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         return true;
     }
 
+
     /**
      * This method returns a string representation of the list in the format
      * "{(start1, length1), (start2, length2), ...}".
@@ -300,8 +325,8 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         StringBuilder builder = new StringBuilder("{");
         Node currNode = head;
         while (currNode != null) {
-            builder.append("(").append(currNode.getStart()).append(", ")
-                   .append(currNode.getLength()).append(")");
+            builder.append("(").append(currNode.getStart()).append(", ").append(
+                currNode.getLength()).append(")");
             if (currNode.next() != null) {
                 builder.append(", ");
             }
@@ -311,12 +336,12 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
         return builder.toString();
     }
 
+
     @Override
     public Iterator<DoubleLL.Node> iterator() {
         return new DoubleLLIterator();
     }
-    
-    
+
     /**
      * This inner class implements an iterator for the DoubleLL class.
      */
@@ -333,21 +358,25 @@ public class DoubleLL implements Iterable<DoubleLL.Node> {
             return current != null;
         }
 
+
         /**
          * Returns the next node in the list and advances the iterator.
          *
          * @return the next node
-         * @throws NoSuchElementException if there is no next node
+         * @throws NoSuchElementException
+         *             if there is no next node
          */
         @Override
         public Node next() {
             if (!hasNext()) {
-                throw new NoSuchElementException("No more elements in the list.");
+                throw new NoSuchElementException(
+                    "No more elements in the list.");
             }
             Node temp = current;
             current = current.next();
             return temp;
         }
+
 
         /**
          * Returns the current node without advancing the iterator.

@@ -4,16 +4,14 @@
  * @author CS Staff
  * @version Fall 2024
  */
-public class Record
-    implements Comparable<Record>
-{
+public class Record implements Comparable<Record> {
     /**
      * 16 bytes per record
      */
     public static final int BYTES = 16;
 
-    private long            recID;
-    private double          key;
+    private long recID;
+    private double key;
 
     /**
      * The constructor for the Record class
@@ -23,8 +21,7 @@ public class Record
      * @param key
      *            record key
      */
-    public Record(long recID, double key)
-    {
+    public Record(long recID, double key) {
         this.recID = recID;
         this.key = key;
     }
@@ -36,8 +33,7 @@ public class Record
      *
      * @return record ID
      */
-    public long getID()
-    {
+    public long getID() {
         return recID;
     }
 
@@ -48,8 +44,7 @@ public class Record
      *
      * @return record key
      */
-    public double getKey()
-    {
+    public double getKey() {
         return key;
     }
 
@@ -61,8 +56,7 @@ public class Record
      * @return int
      */
     @Override
-    public int compareTo(Record toBeCompared)
-    {
+    public int compareTo(Record toBeCompared) {
         return Double.compare(this.key, toBeCompared.key);
     }
 }
