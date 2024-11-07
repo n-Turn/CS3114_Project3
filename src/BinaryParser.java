@@ -110,14 +110,13 @@ public class BinaryParser {
 
 
     public void moveToOutputBuffer() {
-        int currentRecord = 0;
-        while (currentRecord < ByteFile.RECORDS_PER_BLOCK) {
+        while (minHeap.heapSize() > 0) {
             Record removedRecord = minHeap.removeMin();
+            minHeap.setHeapSize(minHeap.heapSize() - 1);
             long recordId = removedRecord.getID();
             double recordKey = removedRecord.getKey();
             outputBuffer.putLong(recordId);
             outputBuffer.putDouble(recordKey);
-            currentRecord++;
         }
     }
 
@@ -284,34 +283,32 @@ public class BinaryParser {
 
 
     /**
-     * Loads the first block from a specific run and adds each record to the heap.
+     * Loads the first block from a specific run and adds each record to the
+     * heap.
      *
-     * @param runIndex Index of the run
+     * @param runIndex
+     *            Index of the run
      * @throws IOException
      */
     private void loadRunBlock() throws IOException {
         Iterator<DoubleLL.Node> iterator = runsTracker.iterator();
-        
-        
-        //start - 1 because the start is the position and we need the index
+
+        // start - 1 because the start is the position and we need the index
         middleFile.seek(runsTracker.getHead().getStart() - 1);
         byte[] buffer = new byte[ByteFile.BYTES_PER_BLOCK];
         middleFile.read(buffer);
         ByteBuffer bb = ByteBuffer.wrap(buffer);
 
-        while(iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             iterator.next();
-            
         }
-        
-        
-//        while (bb.hasRemaining()) {
-//            long recordId = bb.getLong();
-//            double recordKey = bb.getDouble();
-//            Record record = new Record(recordId, recordKey, runIndex);
-//            minHeap.insert(record);
-//        }
+
+// while (bb.hasRemaining()) {
+// long recordId = bb.getLong();
+// double recordKey = bb.getDouble();
+// Record record = new Record(recordId, recordKey, runIndex);
+// minHeap.insert(record);
+// }
     }
 
 
