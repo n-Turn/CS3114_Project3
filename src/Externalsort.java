@@ -5,6 +5,7 @@
  */
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /**
  * The class containing the main method.
@@ -42,8 +43,15 @@ public class Externalsort {
      */
     public static void main(String[] args) throws IOException {
         String fileName = args[0];
-        BinaryParser binaryParser = new BinaryParser(fileName);
-        binaryParser.printRecords();
+        String runsName = "runs.bin";
+        String outputFile = "outputFile.bin";
+
+        int runCount = 1;
+        new ReplacementSelection(fileName, runsName, runCount);
+        new MultiwayMerge(runCount, runsName, outputFile);
+        
+        //BinaryParser binaryParser = new BinaryParser(fileName);
+        //binaryParser.printRecords();
     }
 
 }

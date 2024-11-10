@@ -13,6 +13,22 @@ class Buffer {
     private long position;
 
     /**
+     * @return the position
+     */
+    public long getPosition() {
+        return position;
+    }
+
+
+    /**
+     * @param position the position to set
+     */
+    public void setPosition(long position) {
+        this.position = position;
+    }
+
+
+    /**
      * Create a new buffer.
      * 
      * @param file
@@ -37,7 +53,6 @@ class Buffer {
         file.read(buffer.array());
         buffer.position(0);
     }
-
 
     /**
      * Write buffer contents to file.
